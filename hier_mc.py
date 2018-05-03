@@ -5,8 +5,8 @@ Created on Tue Apr 24 16:53:15 2018
 Description: 
 """
 import numpy as np
+import pandas as pd
 import keras
-import pickle
 import matplotlib.pyplot as plt
 import itertools
 from sklearn.metrics import confusion_matrix
@@ -22,137 +22,11 @@ NUM_FEATURES = 128
 DATA_URL = "https://s3.amazonaws.com/radio-machine-learning/mod_14_clean.pkl"
 FILE_PATH = "/home/gvanhoy/mod_19_snr_10.pkl"
 
-tiers = [
-        ({'name': 'analog',
-          'mods': ('fmcw-triangle', 'fmcw-sawtooth', 'am-dsb', 'am-ssb', 'fm')
-          },
-        {'name': 'digital'})
-        ]
-
-tier_1_labels = ['analog', 'digital']
-
-tier_21_labels = ['radar', 'data-bearing']
-tier_21_mods = [
-        'fmcw-triangle',
-        'fmcw-sawtooth',
-        'am-dsb',
-        'am-ssb',
-        'fm'
-        ]
-
-tier_22_labels = ['multi-carrier', 'single-carrier']
-tier_22_mods = [
-        'ofdm-16-bpsk',
-        'ofdm-32-bpsk',
-        'ofdm-64-bpsk',
-        'ofdm-16-qpsk',
-        'ofdm-32-qpsk',
-        'ofdm-64-qpsk',
-        '2gmsk',
-        '4gmsk',
-        '8gmsk',
-        '2fsk',
-        '4fsk',
-        '8fsk'
-        "ook",
-        "bpsk",
-        "qpsk",
-        "4ask",
-        "4pam",
-        "8psk",
-        "8pam",
-        "8qam_cross",
-        "8qam_circular",
-        "16qam",
-        "16psk",
-        "32qam_cross",
-        "32qam_rect",
-        "64qam"
-        ]
-
-tier_31_labels = ['QAM', 'FSK']
-tier_31_mods = [
-            "ook",
-            "bpsk",
-            "qpsk",
-            "4ask",
-            "4pam",
-            "8psk",
-            "8pam",
-            "8qam_cross",
-            "8qam_circular",
-            "16qam",
-            "16psk",
-            "32qam_cross",
-            "32qam_rect",
-            "64qam"
-            '2gmsk',
-            '4gmsk',
-            '8gmsk',
-            '2fsk',
-            '4fsk',
-            '8fsk'
-        ]
-
-tier_41_mods = [
-            "ook",
-            "bpsk",
-            "qpsk",
-            "4ask",
-            "4pam",
-            "8psk",
-            "8pam",
-            "8qam_cross",
-            "8qam_circular",
-            "16qam",
-            "16psk",
-            "32qam_cross",
-            "32qam_rect",
-            "64qam"
-]
-
-tier_42_mods = [
-            '2gmsk',
-            '4gmsk',
-            '8gmsk',
-            '2fsk',
-            '4fsk',
-            '8fsk'
-]
-
-tier_43_mods = [
-            'ofdm-16-bpsk',
-            'ofdm-32-bpsk',
-            'ofdm-64-bpsk',
-            'ofdm-16-qpsk',
-            'ofdm-32-qpsk',
-            'ofdm-64-qpsk',
-]
-
-tier_44_mods= [
-        'fm',
-        'am-dsb',
-        'am-ssb'
-]
-
-tier_45_mods = [
-        'fmcw-triangle',
-        'fmcw-sawtooth'
-]
-
 # %% Get the data and prepare it as necessary
 x = []
 lbl = []
 
-# Code for generating data. Requires GNU Radio and other code
-# data = {'bpsk': [exemplar1, exemplar2, ...,]
-#         'qpsk': [exemplar1, exemplar2, ...,]}
-
-mods, data = load_data(channel_type='over_the_air_selective', # "awgn" for adding noise
-                       snr_db=10,         # if noise is present
-                       num_cplx_samples=NUM_FEATURES, # real + imag
-                       num_exemplars=5000) # exemplars per mod
-# %%
+df = pd.read_pickle("/home/gvanhoy/mod_26_rsf.gz")
 # f = open(FILE_PATH, "rb")
 # mods, data = pickle.loads(f.read())
 
@@ -160,101 +34,18 @@ mods, data = load_data(channel_type='over_the_air_selective', # "awgn" for addin
 # this is currently done in a way to support a unique label
 # per SNR or multi-labelling later 
 # %% Top-level
+mods = df["mod_name"].unique().tolist()
 
-for tier in tiers:
-    for mod in mods:
-        if mod in tier['mods']:
-            x.append(data[mod])
-            for i in range(data[mod].shape[0]):
-                if tier['']
-                    lbl.append('analog')
-                else:
-                    lbl.append('digital')
-
-super_class = ['analog', 'digital']
-'''
-# %% Single vs Multi-carrier
-'''
 for mod in mods:
-    if 'fm' not in mod and 'dsb' not in mod and 'ssb' not in mod:
-        x.append(data[mod])
-        for i in range(data[mod].shape[0]):
-            if 'ofdm' not in mod:
-                lbl.append('single-carrier')
-            else:
-                lbl.append('multi-carrier')
-
-super_class = ['single-carrier', 'multi-carrier']
-'''
-# %% Data vs Radar
-'''
-for mod in mods:
-    if 'fm' in mod or 'dsb' in mod or 'ssb' in mod:
-        x.append(data[mod])
-        for i in range(data[mod].shape[0]):
-            if 'fmcw' in mod:
-                lbl.append('radar')
-            else:
-                lbl.append('data-bearing')
-
-super_class = ['radar', 'data-bearing']
-'''
-# %% QAM vs FSK
-'''
-for mod in mods:
-    if 'ofdm' not in mod and 'fmcw' not in mod and 'am-' not in mod and 'fm' not in mod:
-        x.append(data[mod])
-        for i in range(data[mod].shape[0]):
-            if 'fsk' in mod or 'gmsk' in mod:
-                lbl.append('fsk')
-            else:
-                lbl.append('qam')
-
-super_class = ['FSK', 'QAM']
-'''
-# %% AM//FM
-'''
-for mod in mods:
-    if 'am-' in mod or mod == 'fm':
-        x.append(data[mod])
-        for i in range(data[mod].shape[0]): lbl.append(mod)
-
-super_class = ['am-ssb', 'am-dsb', 'fm']
-'''
-# %% FMCW
-'''
-for mod in mods:
-    if 'fmcw' in mod:
-        x.append(data[mod])
-        for i in range(data[mod].shape[0]): lbl.append(mod)
-
-super_class = ['fmcw-triangle', 'fmcw-sawtooth']
-'''
-# %% FSK
-'''
-for mod in mods:
-    if 'fsk' in mod or 'gmsk' in mod:
-        x.append(data[mod])
-        for i in range(data[mod].shape[0]): lbl.append(mod)
-
-super_class = ['2fsk', '4fsk', '8fsk', '2gmsk', '4gmsk', '8gmsk']
-'''
-# %% QAM
-'''
-for mod in mods:
-    if 'fsk' not in mod and 'gmsk' not in mod and 'am-' not in mod and 'fmcw' not in mod and 'ofdm' not in mod and 'fm' not in mod:
-        x.append(data[mod])
-        for i in range(data[mod].shape[0]): lbl.append(mod)
-
-super_class = ["ook", "bpsk", "qpsk", "4ask", "4pam", "8psk", "8pam", 
-               "8qam_cross", "8qam_circular", "16qam", 
-               "16psk", "32qam_cross", "32qam_rect", "64qam"]
-
-x = np.vstack(x) # stack it up my friend
+    for series in df[df["mod_name"] == mod].iloc[:,:NUM_FEATURES].values:
+        x.append(series)
+        lbl.append(mod)
+        
+x = np.vstack(x)
 x_train, x_test, y_train, y_test = train_test_split(x, lbl, test_size=0.33, random_state=42)
 
-y_train = keras.utils.to_categorical(map(lambda x: super_class.index(y_train[x]), range(len(y_train))))
-y_test = keras.utils.to_categorical(map(lambda x: super_class.index(y_test[x]), range(len(y_test))))
+y_train = keras.utils.to_categorical(map(lambda x: mods.index(y_train[x]), range(len(y_train))))
+y_test = keras.utils.to_categorical(map(lambda x: mods.index(y_test[x]), range(len(y_test))))
 
 # %% Make the model
 '''
@@ -365,7 +156,7 @@ np.set_printoptions(precision=2)
 
 # Plot normalized confusion matrix
 plt.figure(figsize=(7,7))
-plot_confusion_matrix(cnf_matrix, classes=super_class, normalize=True,
+plot_confusion_matrix(cnf_matrix, classes=mods, normalize=True,
                       title='Normalized confusion matrix')
 
 plt.show()
